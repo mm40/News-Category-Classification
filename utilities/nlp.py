@@ -1,13 +1,9 @@
 class Vocabulary():
-    def __init__(self, unk=None):
+    def __init__(self):
         """Vocabulary constructor
-        Args:
-           unk (str) : String for <unknown> token to be added (if not None)
         """
         self._token_to_id = {}
         self._id_to_token = {}
-        if unk is not None:
-            self.insert_token(unk)
 
     def insert_token(self, token):
         """Adds token to vocabulary (if it doesn't exist) and returns id of it.
@@ -60,4 +56,55 @@ class Vocabulary():
 
 class VocabularySeq(Vocabulary):
     """Vocabulary, but with sequence tokens added"""
-    pass
+    def __init__(self, unkToken='<UNK>', beginSeqToken='<seq_beg>',
+                 endSeqToken='<seq_end>', maskToken='<mask>'):
+        """Instantiates VocabularySeq
+
+        Args:
+           unkToken (str) : unknown token (default '<UNK>')
+           beginSeqToken (str): token for sequence start (default '<seq_beg>')
+           endSeqToken (str): token for sequence end (default '<seq_end>')
+           maskToken (str): token for mask (default '<mask>')
+        """
+        super().__init__()
+
+        self._unkToken = unkToken
+        self._beginSeqToken = beginSeqToken
+        self._endSeqToken = endSeqToken
+        self._maskToken = maskToken
+
+        self.insert_token(unkToken)
+        self.insert_token(maskToken)
+        self.insert_token(beginSeqToken)
+        self.insert_token(endSeqToken)
+
+class SentenceTensorConverter():
+    """Converts a list of tokens (str) into a tensor of their id's (int)"""
+    def __init__(self, vocabulary, fixWidthTo=None):
+        """Creates instance of converter which should use given vocabulary
+
+        Args:
+           vocabulary (nlp.VocabularySeq): vocabulary to use for conversion
+           fixWidthTo (int): if not None, all conversions will have this width.
+              Note : this width INCLUDES begin and end markers (default None)
+        """
+        self._vocabulary = vocabulary
+        self._fixWidthTo = fixWidthTo
+
+    def tokensToIds(self, tokenList):
+        """Converts a list of tokens to a tensor of their id's, with respect to
+        instance's fixWidthTo parameter passed to constructor.
+
+        Args:
+            tokenList (list): list of tokens (str) to convert to their id's
+
+        Returns:
+            1d tensor of id's (torch.Tensor)
+        """
+        listWidth = len(tokenList) + 2
+        width = listWidth if self._fixWidthTo is None else self._fixWidthTo
+
+        if listWidth > width:
+            raise ValueError("Output tensor width is fixed to {}, but input "
+                             "token list requires length of {}.".format(
+                                 width, listWidth))
