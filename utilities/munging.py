@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import re
-import string
+from pandas import read_json
 
 
 def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL'):
@@ -63,3 +63,17 @@ def apply_regex_list_to_text(regex_list, text):
     for pattern, replacement in regex_list:
         text = re.sub(pattern, replacement, text)
     return text
+
+
+def convert_json_file_to_csv(path_json_in, path_csv_out, onlyColumns=None):
+    """Converts json file loaded from in path to csv file saved to out path
+
+    Args:
+        path_json_in (str): filepath to input json file
+        path_csv_out (str): filepath to output csv file
+        onlyColumns (list): columns to export. All if none (default None)
+    """
+    raw_input = read_json(path_json_in, lines=True, orient='columns')
+    # Note : further processing of the input file may be needed. See :
+    # https://www.kaggle.com/tboyle10/working-with-json-files
+    raw_input.to_csv(path_csv_out, index=False, columns=onlyColumns)

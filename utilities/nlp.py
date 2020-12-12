@@ -1,5 +1,8 @@
 from typing import NamedTuple
+from utilities.munging import apply_regex_list_to_text
 import torch
+from collections import Counter
+import pickle
 
 
 class Vocabulary():
@@ -56,6 +59,69 @@ class Vocabulary():
 
     def __len__(self):
         return len(self._idx_to_token)
+
+    @classmethod
+    def fromSentenceList(cls, sentences, regex_list, cnt_threshold):
+        """Creates a vocabulary from list of text sentences. To each
+            sentence in sentences, regex is applied, it's split by space
+            into tokens, and than those tokens which occur more than specified
+            threshold times, are added to vocabulary.
+
+        Args:
+            sentences (iterable object): each element is (str) sentence of text
+            regex_list (list): list of pairs of regex rules to apply
+            cnt_threshold (int): minimum number each token must appera, to be
+                added to vocabulary
+
+        Returns:
+            (cls): vocabulary with words from sentences added.
+        """
+        vocab = cls()
+        cntr = Counter()
+        for line in sentences:
+            line = apply_regex_list_to_text(regex_list, line.lower())
+            for token in filter(None, line.split(" ")):
+                cntr[token] += 1
+
+        for token, cnt in cntr.items():
+            if cnt >= cnt_threshold:
+                vocab.insert_token(token)
+
+        return vocab
+
+    @classmethod
+    def fromLiteralTokenList(cls, tokens):
+        """Creates a vocabulary from list of items which will be added as tokens.
+
+        Args:
+            cls arg1
+            tokens (list): list of (str) items, which will be added as tokens
+                to the vocabulary AS THEY ARE WITH NO PROCESSING.
+
+
+        Returns:
+            (cls): vocabulary with tokens from the list added
+        """
+        vocab = cls()
+        for token in set(tokens):  # convert to set to not iterate same items
+            vocab.insert_token(token)
+        return vocab
+
+    def toFile(self, path):
+        """Saves vocabulary to a file specified by file path (str)"""
+        with open(path, "wb") as f:
+            pickle.dump(self._idx_to_token, f)
+
+    @classmethod
+    def fromFile(cls, path):
+        """Instantiates a vocabulary from file saved using toFile function"""
+        vocab = cls()
+        with open(path, "rb") as f:
+            vocab._idx_to_token = pickle.load(f)
+        vocab._token_to_idx = {}
+        for idx, token in vocab._idx_to_token.items():
+            vocab._token_to_idx[token] = idx
+        return vocab
 
 
 class VocabularySeq(Vocabulary):
