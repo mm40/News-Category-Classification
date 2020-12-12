@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import re
+import string
 
 
 def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL'):
@@ -44,3 +46,20 @@ def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL'):
         result_df.iloc[last_index:num_rows,
                        result_df.columns.get_loc(labelCol)] = last_label
     return result_df
+
+
+def apply_regex_list_to_text(regex_list, text):
+    """Applies regex replacements from regex_list to text, and returns result.
+
+    Args:
+        regex_list (list) : list of pairs of strings. First member of pair will
+            be what to search for, and second member what to replace it with.
+            For example : (("([.,!])", " \1 "), ...)
+        text (str): input text to apply regex_list to.
+
+    Returns:
+        Text with applied regex (str)
+    """
+    for pattern, replacement in regex_list:
+        text = re.sub(pattern, replacement, text)
+    return text
