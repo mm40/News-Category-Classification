@@ -4,7 +4,8 @@ import re
 from pandas import read_json
 
 
-def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL'):
+def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL',
+                               dropna=True):
     """Attaches column with labels to dataset, with respect to set proportions.
     Arguments:
      df: dataframe to modify
@@ -12,10 +13,12 @@ def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL'):
              Example : {"train": 0.70, "test": 0.20, "val": 0.10}
      shuffle: whether labels should be shuffled
      labelCol: name of the column to be added, to store labels
-    Output:
-     Outputs the dataframe with additional column labelCol, which will contain
+    Returns:
+     Returns the dataframe with additional column labelCol, which will contain
      labels with given proportions."""
 
+    if dropna:
+        df = df.dropna()
     num_rows = len(df.index)  # fastest way to calculate number of rows
     total_proportions = 0  # must sum to 1
     result_df = df.sample(frac=1) if shuffle else df
