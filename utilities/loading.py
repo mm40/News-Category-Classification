@@ -36,17 +36,28 @@ class DatasetNews(Dataset):
                              '{}'.format(label, list(self._dataSplits.keys())))
 
     def __getitem__(self, idx):
+        if self._selectedData is None:
+            # TODO : same exact error message in __getitem__ and __len__.
+            # for a better style, merge them into a class, or unique varuable.
+            raise LookupError('Data Split not selected. Available splits are:'
+                              ' {}. Use function selectData to set one of'
+                              ' them.'.format(list(self._dataSplits.keys())))
         return self._selectedData.iloc[idx]
 
     def __len__(self):
+        if self._selectedData is None:
+            raise LookupError('Data Split not selected. Available splits are:'
+                              ' {}. Use function selectData to set one of'
+                              ' them.'.format(list(self._dataSplits.keys())))
         return len(self._selectedData)
 
 
 class DatasetNewsVectorized(DatasetNews):
     def __init__(self, df, splitColHeader, vocabCat, vocabHeadl, regexList,
-                 headerCategory, headerHeadline):
+                 headerCategory, headerHeadline, deviceStr='cpu'):
         """Instantiates DatasetNewsVectorized object, which is different to
             DatasetNews in that it returns vectorized result, instead of plain.
+            NOTE : df is modified in-place!
 
         Args:
             df (pandas.DataFrame): see help for DatasetNews constructor
@@ -60,17 +71,14 @@ class DatasetNewsVectorized(DatasetNews):
         self._vocabHeadl = vocabHeadl
         self._headerCategory = headerCategory
         self._headerHeadline = headerHeadline
+        self._deviceStr = deviceStr
 
         class localMaxLengthKeeper():
             """Just an integer to be increased to max value"""
             def __init__(self):
                 self.maxLength = 0
-                # TODO: use lengthsCntr to remove too long headlines (outliers)
-                # with localTextProcess, add colun with width, for easy remove?
-                self.lengthsCntr = Counter()
 
             def updateLength(self, newLength):
-                self.lengthsCntr[newLength] += 1
                 if newLength > self.maxLength:
                     self.maxLength = newLength
 
@@ -90,12 +98,12 @@ class DatasetNewsVectorized(DatasetNews):
                                                   self._maxSeqLength)
 
         super().__init__(df, splitColHeader)  # called after df.apply
-        pass
 
     def __getitem__(self, idx):
         """Vectorizes headline text, gets category id, returns dict of those"""
         row = super().__getitem__(idx)
         headlineList = row[self._headerHeadline].split(" ")
         category = row[self._headerCategory]
-        return {"x": self._converter.tokensToIdxs(headlineList),
+        return {"x": self._converter.tokensToIdxs(headlineList,
+                                                  self._deviceStr),
                 "y": self._vocabCat.idx_from_token(category)}

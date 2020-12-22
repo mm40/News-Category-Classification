@@ -4,10 +4,25 @@ import re
 from pandas import read_json
 
 
+def attach_token_count_column(df, textColumnName, cntColumnName):
+    """Takes a dataframe, and for each row, splits textColumn by space (" ")
+    into tokens, stores the split length into column cntColumnName.
+    NOTE : changes df in-place!
+
+    Args:
+        df (DataFrame): dataframe to which to add cnt column
+        textColumnName (str): name of the column to split and count parts
+        cntColumnName (str): name of the column to be added, containing counts
+    """
+    df[cntColumnName] = df[textColumnName].str.split().str.len()
+    return df
+
+
 def attach_proportional_labels(df, labels, shuffle=True, labelCol='LABEL',
                                dropna=True):
     """Attaches column with labels to dataset, with respect to set proportions.
-    Arguments:
+
+    Args:
      df: dataframe to modify
      labels: dicitonary of {label : proportion,... }. Proportions must sum to 1
              Example : {"train": 0.70, "test": 0.20, "val": 0.10}

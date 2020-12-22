@@ -175,7 +175,7 @@ class SentenceTensorConverter():
         self._vocabulary = vocabulary
         self._fixWidthTo = fixWidthTo
 
-    def tokensToIdxs(self, tokenList):
+    def tokensToIdxs(self, tokenList, deviceStr='cpu'):
         """Converts a list of tokens to a tensor of their idx's, with respect to
         instance's fixWidthTo parameter passed to constructor.
 
@@ -196,7 +196,7 @@ class SentenceTensorConverter():
         s = v.getSpecials()
 
         result = torch.full((width,), fill_value=s["mask"].idx,
-                            dtype=torch.int64)
+                            dtype=torch.int64, device=torch.device(deviceStr))
         result[0] = s["beginSeq"].idx
         for i, token in enumerate(tokenList):
             result[i + 1] = v.idx_from_token(token)
