@@ -191,7 +191,7 @@ class SentenceTensorConverter():
         if listWidth + 2 > width:
             raise ValueError("Output tensor width is fixed to {}, but input "
                              "token list requires length of {}.".format(
-                                 width, listWidth))
+                                 width, listWidth + 2))
         v = self._vocabulary
         s = v.getSpecials()
 

@@ -1,9 +1,9 @@
 from torch.utils.data.dataset import Dataset
-from torch.utils.data.dataloader import DataLoader
 from utilities.munging import apply_regex_list_to_text
 from utilities.nlp import SentenceTensorConverter
 from pandas import unique
 from collections import Counter
+from torch.utils.data.dataloader import DataLoader
 
 
 class DatasetNews(Dataset):
@@ -90,9 +90,11 @@ class DatasetNewsVectorized(DatasetNews):
             return text
 
         keeper = localMaxLengthKeeper()
+        # Note : if sequence is not limited, and calculating max length is not
+        # required, apply logic should be moved to __getitem__ from here
         df[headerHeadline] = df[headerHeadline].apply(localTextProcess,
                                                       keeper=keeper)
-        self._maxSeqLength = keeper.maxLength
+        self._maxSeqLength = keeper.maxLength + 2  # + 2 for beg/end seq sym.
 
         self._converter = SentenceTensorConverter(self._vocabHeadl,
                                                   self._maxSeqLength)
@@ -102,8 +104,33 @@ class DatasetNewsVectorized(DatasetNews):
     def __getitem__(self, idx):
         """Vectorizes headline text, gets category id, returns dict of those"""
         row = super().__getitem__(idx)
-        headlineList = row[self._headerHeadline].split(" ")
+        headlineList = list(filter(None, row[self._headerHeadline].split(" ")))
         category = row[self._headerCategory]
         return {"x": self._converter.tokensToIdxs(headlineList,
                                                   self._deviceStr),
                 "y": self._vocabCat.idx_from_token(category)}
+
+    def getMaxSeqLength(self):
+        return self._maxSeqLength
+
+
+class DataLoaderManager():
+    """DataLoader wrapper with capabilities to select label of input dataset,
+    using function selectData(label) of the dataset"""
+    def __init__(self, dataset, *args, **kwargs):
+        """
+        Args:
+            dataset (DataSetSubclass): some subclass of DataSet which has
+                selectData function to select the split.
+            args: to be passed to DataLoader constructor
+            kwargs: -||-
+        """
+        self._dataset = dataset
+        self._data_loader_args = args
+        self._data_loader_kwargs = kwargs
+
+    def createDataLoader(self, label):
+        self._dataset.selectData(label)
+        dl = DataLoader(self._dataset, *self._data_loader_args,
+                        **self._data_loader_kwargs)
+        return dl
