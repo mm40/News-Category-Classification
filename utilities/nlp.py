@@ -61,7 +61,7 @@ class Vocabulary():
         return len(self._idx_to_token)
 
     @classmethod
-    def fromSentenceList(cls, sentences, regex_list, cnt_threshold):
+    def from_sentence_list(cls, sentences, regex_list, cnt_threshold):
         """Creates a vocabulary from list of text sentences. To each
             sentence in sentences, regex is applied, it's split by space
             into tokens, and than those tokens which occur more than specified
@@ -90,7 +90,7 @@ class Vocabulary():
         return vocab
 
     @classmethod
-    def fromLiteralTokenList(cls, tokens):
+    def from_literal_token_list(cls, tokens):
         """Creates a vocabulary from list of items which will be added as tokens.
 
         Args:
@@ -113,7 +113,7 @@ class Vocabulary():
             pickle.dump(self._idx_to_token, f)
 
     @classmethod
-    def fromFile(cls, path):
+    def from_file(cls, path):
         """Instantiates a vocabulary from file saved using toFile function"""
         vocab = cls()
         with open(path, "rb") as f:
@@ -126,15 +126,15 @@ class Vocabulary():
 
 class VocabularySeq(Vocabulary):
     """Vocabulary, but with sequence tokens added"""
-    def __init__(self, unkToken='<UNK>', beginSeqToken='<seq_beg>',
-                 endSeqToken='<seq_end>', maskToken='<mask>'):
+    def __init__(self, unk_token='<UNK>', begin_seq_token='<seq_beg>',
+                 end_seq_token='<seq_end>', mask_token='<mask>'):
         """Instantiates VocabularySeq
 
         Args:
-           unkToken (str) : unknown token (default '<UNK>')
-           beginSeqToken (str): token for sequence start (default '<seq_beg>')
-           endSeqToken (str): token for sequence end (default '<seq_end>')
-           maskToken (str): token for mask (default '<mask>')
+           unk_token (str) : unknown token (default '<UNK>')
+           begin_seq_token (str): token for seq. start (default '<seq_beg>')
+           end_seq_token (str): token for sequence end (default '<seq_end>')
+           mask_token (str): token for mask (default '<mask>')
         """
         super().__init__()
 
@@ -143,19 +143,19 @@ class VocabularySeq(Vocabulary):
             idx: int
 
         self._specials = {"unknown":
-                          TokenInfo(unkToken, self.insert_token(unkToken)),
+                          TokenInfo(unk_token, self.insert_token(unk_token)),
                           "mask":
-                          TokenInfo(maskToken, self.insert_token(maskToken)),
+                          TokenInfo(mask_token, self.insert_token(mask_token)),
                           "beginSeq":
-                          TokenInfo(beginSeqToken,
-                                    self.insert_token(beginSeqToken)),
+                          TokenInfo(begin_seq_token,
+                                    self.insert_token(begin_seq_token)),
                           "endSeq":
-                          TokenInfo(endSeqToken,
-                                    self.insert_token(endSeqToken))}
+                          TokenInfo(end_seq_token,
+                                    self.insert_token(end_seq_token))}
 
         self._unkIdx = self._specials["unknown"].idx
 
-    def getSpecials(self):
+    def get_specials(self):
         return self._specials  # No need to copy, NamedTuples are immutable
 
     def idx_from_token(self, token):
@@ -164,42 +164,42 @@ class VocabularySeq(Vocabulary):
 
 class SentenceTensorConverter():
     """Converts a list of tokens (str) into a tensor of their idx's (int)"""
-    def __init__(self, vocabulary, fixWidthTo=None):
+    def __init__(self, vocabulary, fix_width_to=None):
         """Creates instance of converter which should use given vocabulary
 
         Args:
            vocabulary (nlp.VocabularySeq): vocabulary to use for conversion
-           fixWidthTo (int): if not None, all conversions will have this width.
+           fix_width_to (int): if not None, all conversions will have this width.
               Note : this width INCLUDES begin and end markers (default None)
         """
         self._vocabulary = vocabulary
-        self._fixWidthTo = fixWidthTo
+        self._fix_width_to = fix_width_to
 
-    def tokensToIdxs(self, tokenList, deviceStr='cpu'):
+    def tokens_to_idxs(self, token_list, device_str='cpu'):
         """Converts a list of tokens to a tensor of their idx's, with respect to
-        instance's fixWidthTo parameter passed to constructor.
+        instance's fix_width_to parameter passed to constructor.
 
         Args:
-            tokenList (list): list of tokens (str) to convert to their idx's
+            token_list (list): list of tokens (str) to convert to their idx's
 
         Returns:
             1-d tensor of idx's (torch.Tensor)
         """
-        listWidth = len(tokenList)
-        width = listWidth + 2 if self._fixWidthTo is None else self._fixWidthTo
+        list_width = len(token_list)
+        width = list_width + 2 if self._fix_width_to is None else self._fix_width_to
 
-        if listWidth + 2 > width:
+        if list_width + 2 > width:
             raise ValueError("Output tensor width is fixed to {}, but input "
                              "token list requires length of {}.".format(
-                                 width, listWidth + 2))
+                                 width, list_width + 2))
         v = self._vocabulary
-        s = v.getSpecials()
+        s = v.get_specials()
 
         result = torch.full((width,), fill_value=s["mask"].idx,
-                            dtype=torch.int64, device=torch.device(deviceStr))
+                            dtype=torch.int64, device=torch.device(device_str))
         result[0] = s["beginSeq"].idx
-        for i, token in enumerate(tokenList):
+        for i, token in enumerate(token_list):
             result[i + 1] = v.idx_from_token(token)
-        result[listWidth + 1] = s["endSeq"].idx
+        result[list_width + 1] = s["endSeq"].idx
 
         return result
