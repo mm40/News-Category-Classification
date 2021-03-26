@@ -169,7 +169,7 @@ class SentenceTensorConverter():
 
         Args:
            vocabulary (nlp.VocabularySeq): vocabulary to use for conversion
-           fix_width_to (int): if not None, all conversions will have this width.
+           fix_width_to (int): if not None all conversions will have this width
               Note : this width INCLUDES begin and end markers (default None)
         """
         self._vocabulary = vocabulary
@@ -186,7 +186,8 @@ class SentenceTensorConverter():
             1-d tensor of idx's (torch.Tensor)
         """
         list_width = len(token_list)
-        width = list_width + 2 if self._fix_width_to is None else self._fix_width_to
+        width = list_width + 2 if self._fix_width_to is None \
+            else self._fix_width_to
 
         if list_width + 2 > width:
             raise ValueError("Output tensor width is fixed to {}, but input "

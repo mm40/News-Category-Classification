@@ -12,7 +12,7 @@ def attach_token_count_column(df, text_column_name, cnt_column_name):
     Args:
         df (DataFrame): dataframe to which to add cnt column
         text_column_name (str): name of the column to split and count parts
-        cnt_column_name (str): name of the column to be added, containing counts
+        cnt_column_name (str): name of column to be added, containing counts
     """
     df[cnt_column_name] = df[text_column_name].str.split().str.len()
     return df

@@ -31,8 +31,8 @@ class DatasetNews(Dataset):
             self._selected_data = self._data_splits[label]
         else:
             raise ValueError('Data split label "{}" was tried to be selected, '
-                             'however only the following splits were created: '
-                             '{}'.format(label, list(self._data_splits.keys())))
+                             'however only these splits were created: {}'.
+                             format(label, list(self._data_splits.keys())))
 
     def __getitem__(self, idx):
         if self._selected_data is None:
@@ -52,8 +52,9 @@ class DatasetNews(Dataset):
 
 
 class DatasetNewsVectorized(DatasetNews):
-    def __init__(self, df, split_col_header, vocab_cat, vocab_headl, regex_list,
-                 header_category, header_headline, device_str='cpu'):
+    def __init__(self, df, split_col_header, vocab_cat, vocab_headl,
+                 regex_list, header_category, header_headline,
+                 device_str='cpu'):
         """Instantiates DatasetNewsVectorized object, which is different to
             DatasetNews in that it returns vectorized result, instead of plain.
             NOTE : df is modified in-place!
@@ -62,7 +63,7 @@ class DatasetNewsVectorized(DatasetNews):
             df (pandas.DataFrame): see help for DatasetNews constructor
             split_col_header (str): -||-
             vocab_cat (Vocabulary): vocabulary for translating category to idx
-            vocab_headl (VocabularySeq): vocabulary for sequentializing headline
+            vocab_headl (VocabularySeq): vocab for sequentializing headline
             header_category (str): header of category column of dataframe
             header_headline (str): header of headline column of dataframe
         """
@@ -93,7 +94,7 @@ class DatasetNewsVectorized(DatasetNews):
         # required, apply logic should be moved to __getitem__ from here
         df[header_headline] = df[header_headline].apply(local_text_process,
                                                         keeper=keeper)
-        self._max_seq_length = keeper.max_length + 2  # + 2 for beg/end seq sym.
+        self._max_seq_length = keeper.max_length + 2  # + 2 for beg/end seq sym
 
         self._converter = SentenceTensorConverter(self._vocab_headl,
                                                   self._max_seq_length)
@@ -103,9 +104,10 @@ class DatasetNewsVectorized(DatasetNews):
     def __getitem__(self, idx):
         """Vectorizes headline text, gets category id, returns dict of those"""
         row = super().__getitem__(idx)
-        headlineList = list(filter(None, row[self._header_headline].split(" ")))
+        headline_list = list(filter(None,
+                                    row[self._header_headline].split(" ")))
         category = row[self._header_category]
-        return {"x": self._converter.tokens_to_idxs(headlineList,
+        return {"x": self._converter.tokens_to_idxs(headline_list,
                                                     self._device_str),
                 "y": self._vocab_cat.idx_from_token(category)}
 
