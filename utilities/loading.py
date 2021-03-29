@@ -83,7 +83,7 @@ class DatasetNewsVectorized(DatasetNews):
                     self.max_length = new_length
 
         def local_text_process(text, keeper):
-            """Besides modidying text, this function will set longest sequence.
+            """Besides modifying text, this function will set longest sequence.
             This hack is done to not iterate again for determining it later."""
             text = apply_regex_list_to_text(regex_list, text.lower())
             keeper.update_length(len(list(filter(None, text.split(" ")))))
@@ -94,7 +94,7 @@ class DatasetNewsVectorized(DatasetNews):
         # required, apply logic should be moved to __getitem__ from here
         df[header_headline] = df[header_headline].apply(local_text_process,
                                                         keeper=keeper)
-        self._max_seq_length = keeper.max_length + 2  # + 2 for beg/end seq sym
+        self._max_seq_length = keeper.max_length + 2  # 2 for beg/end seq sym
 
         self._converter = SentenceTensorConverter(self._vocab_headl,
                                                   self._max_seq_length)
