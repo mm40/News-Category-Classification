@@ -107,14 +107,14 @@ class Vocabulary():
             vocab.insert_token(token)
         return vocab
 
-    def toFile(self, path):
+    def to_file(self, path):
         """Saves vocabulary to a file specified by file path (str)"""
         with open(path, "wb") as f:
             pickle.dump(self._idx_to_token, f)
 
     @classmethod
     def from_file(cls, path):
-        """Instantiates a vocabulary from file saved using toFile function"""
+        """Instantiates a vocabulary from file saved using to_file function"""
         vocab = cls()
         with open(path, "rb") as f:
             vocab._idx_to_token = pickle.load(f)
